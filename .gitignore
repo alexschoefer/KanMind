@@ -1,0 +1,69 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# =========================
+# Virtual Environments
+# =========================
+.venv/
+venv/
+env/
+ENV/
+
+# =========================
+# Django
+# =========================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Media uploads (user-generated)
+media/
+
+# Collected static files
+staticfiles/
+
+# =========================
+# Django migrations
+# (Solo-Projekt – optional)
+# =========================
+# Wenn du migrations NICHT versionieren willst, aktivieren:
+# */migrations/*
+# !*/migrations/__init__.py
+
+# =========================
+# Tests & Coverage
+# =========================
+.coverage
+htmlcov/
+.pytest_cache/
+coverage.xml
+
+# =========================
+# Build & Packaging
+# =========================
+build/
+dist/
+*.egg-info/
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# macOS
+# =========================
+.DS_Store
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
