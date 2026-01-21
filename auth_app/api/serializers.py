@@ -1,15 +1,17 @@
 from rest_framework import serializers
 from auth_app.models import UserProfile
+from django.contrib.auth.models import User
 
 class RegistrationSerializer(serializers.ModelSerializer):
 
     #Repeated Password nur schreiben, aber nicht zurückgeben
     repeated_password = serializers.CharField(write_only=True)
+    fullname = serializers.CharField(write_only=True)
 
     class Meta:
-        model = UserProfile
+        model = User
         fields = [
-            'user_email', 
+            'email', 
             'fullname', 
             'password', 
             'repeated_password']
@@ -25,20 +27,20 @@ class RegistrationSerializer(serializers.ModelSerializer):
     
     #Email Validierung
     def validate_email(self, value):
-        if UserProfile.objects.filter(email=value).exists():
+        if User.objects.filter(email=value).exists():
             raise serializers.ValidationError('The email address already belongs to an account.')
         return value
     
     #Create User
     def create(self, validated_data):
+        repeated_password = validated_data.pop('repeated_password')
+        fullname = validated_data.pop('fullname')
+        email = validated_data['email']
 
-        #Passwort ist nur für die Validation notwendig, keine Speicherung 
-        validated_data.pop('repeated_password')
-
-        user = UserProfile.objects.create_user(
-        username=validated_data['username'],
-        email=validated_data.get('email'),
-        password=validated_data['password']
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=validated_data['password']
         )
-
+        UserProfile.objects.create(user=user, fullname=fullname)
         return user
