@@ -26,3 +26,17 @@ class RegistrationView(generics.CreateAPIView):
 
     def get(self, request):
         return Response({'message': 'running...'}, status=status.HTTP_200_OK)
+    
+    def create(self, request, *args, **kwargs):
+        # 1️⃣ Serializer initialisieren
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # 2️⃣ User erstellen (kommt aus serializer.create())
+        user = serializer.save()
+
+        # 3️⃣ Token + User-Daten zurückgeben
+        response_data = create_auth_token_response(user)
+
+        # 4️⃣ HTTP 201 Created
+        return Response(response_data, status=status.HTTP_201_CREATED)
