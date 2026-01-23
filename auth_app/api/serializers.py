@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from auth_app.models import UserProfile
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
 class RegistrationSerializer(serializers.ModelSerializer):
 
@@ -44,3 +45,34 @@ class RegistrationSerializer(serializers.ModelSerializer):
         )
         UserProfile.objects.create(user=user, fullname=fullname)
         return user
+
+
+class UserLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        user = self._get_user_by_email(email)
+        self._check_password(user, password)
+
+        data['user'] = user
+        return data
+
+    def _get_user_by_email(self, email):
+        try:
+            return User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({
+                'email': 'No account with this email address.'
+            })
+
+    def _check_password(self, user, password):
+        if not authenticate(username=user.username, password=password):
+            raise serializers.ValidationError({
+                'password': 'Invalid password. Please check.'
+            })
+
+    
