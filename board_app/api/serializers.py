@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from board_app.models import Board
+from task_app.models import Task
 from django.contrib.auth.models import User
 
 class BoardDashboardSerializer(serializers.ModelSerializer):
@@ -25,10 +26,7 @@ class BoardDashboardSerializer(serializers.ModelSerializer):
         return obj.members.count()
     
     def get_ticket_count(self, obj):
-        # return obj.tasks.count()
-        if hasattr(obj, "tasks"):
-            return obj.tasks.count()
-        return 0
+        return obj.tasks.count()
 
     def get_tasks_to_do_count(self, obj):
         return obj.tasks.filter(status="to-do").count()
