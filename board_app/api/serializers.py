@@ -25,10 +25,49 @@ class BoardDashboardSerializer(serializers.ModelSerializer):
         return obj.members.count()
     
     def get_ticket_count(self, obj):
-        return obj.tasks.count()
-    
+        # return obj.tasks.count()
+        if hasattr(obj, "tasks"):
+            return obj.tasks.count()
+        return 0
+
     def get_tasks_to_do_count(self, obj):
         return obj.tasks.filter(status="to-do").count()
     
     def get_tasks_high_prio_count(self, obj):
         return obj.tasks.filter(priority="high").count()
+    
+class BoardCreateSerializer(serializers.ModelSerializer):
+        members = serializers.PrimaryKeyRelatedField(
+            queryset=User.objects.all(),
+            many=True,
+            required=False,
+            write_only=True
+        )
+
+        class Meta: 
+            model = Board
+            fields = [
+                "id",
+                "title",
+                "members"
+            ]
+            read_only_fields = ["id"]
+
+        def create(self, validated_data):
+            #entfernt members aus den validen Daten und gibt den Wert zurück
+            members = validated_data.pop("members", [])
+            #aktueller HTTP-Request
+            request_user = self.context["request"].user
+
+            board = Board.objects.create(
+                #holt den Titel aus dem Request
+                title=validated_data["title"],
+                #Owner wird der User, der den Request absetzt
+                owner=request_user
+            )
+
+            # Owner immer als Member hinzufügen
+            board.members.add(request_user, *members)
+
+            return board
+             
