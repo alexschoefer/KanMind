@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from board_app.models import Board
 from task_app.models import Task
+from task_app.api.serializers import TaskSerializer
 from django.contrib.auth.models import User
 
 class BoardDashboardSerializer(serializers.ModelSerializer):
@@ -68,4 +69,22 @@ class BoardCreateSerializer(serializers.ModelSerializer):
             board.members.add(request_user, *members)
 
             return board
+        
+class BoardMemberSerializer(serializers.ModelSerializer):
+        fullname = serializers.CharField(source="userprofile.fullname")
+
+        class Meta:
+            model = User
+            fields = ["id", "email", "fullname"]
+
              
+class SingleBoardDetailSerializer(serializers.ModelSerializer):
+        members = BoardMemberSerializer(many=True, read_only=True)
+        tasks = TaskSerializer(many=True, read_only=True)
+        owner_id = serializers.IntegerField(source="owner.id", read_only=True)
+
+        class Meta:
+            model = Board
+            fields = ["id", "title", "owner_id", "members", "tasks"]
+
+

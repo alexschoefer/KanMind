@@ -1,4 +1,4 @@
-from .serializers import BoardDashboardSerializer, BoardCreateSerializer
+from .serializers import BoardDashboardSerializer, BoardCreateSerializer, SingleBoardDetailSerializer, BoardMemberSerializer
 from board_app.models import Board
 from rest_framework.response import Response
 from rest_framework import generics, status
@@ -39,3 +39,15 @@ class BoardCreateView(generics.CreateAPIView):
             context={"request": request}
         )
         return Response(dashboard_serializer.data, status=status.HTTP_201_CREATED)
+    
+class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = SingleBoardDetailSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            raise PermissionDenied("You must be logged in to view the board.")
+        return Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
+
+    
