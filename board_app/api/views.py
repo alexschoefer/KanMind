@@ -1,4 +1,4 @@
-from .serializers import BoardDashboardSerializer, BoardCreateSerializer, SingleBoardDetailSerializer, BoardMemberSerializer
+from .serializers import BoardDashboardSerializer, BoardCreateSerializer, SingleBoardDetailSerializer, BoardUpdateSerializer
 from board_app.models import Board
 from rest_framework.response import Response
 from rest_framework import generics, status
@@ -9,7 +9,7 @@ from rest_framework.exceptions import PermissionDenied
 
 
 class BoardDashboardView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
+    permission_classes = [IsAuthenticated]
     serializer_class = BoardDashboardSerializer
 
     #gib mir die Boards, die der Benutzer erstellt hat ODER Mitglied ist
@@ -41,13 +41,18 @@ class BoardCreateView(generics.CreateAPIView):
         return Response(dashboard_serializer.data, status=status.HTTP_201_CREATED)
     
 class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = SingleBoardDetailSerializer
+    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
 
     def get_queryset(self):
         user = self.request.user
-        if not user.is_authenticated:
-            raise PermissionDenied("You must be logged in to view the board.")
-        return Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
+        return Board.objects.filter(
+            Q(owner=user) | Q(members=user)
+        ).distinct()
+
+    def get_serializer_class(self):
+        if self.request.method in ["PATCH", "PUT"]:
+            return BoardUpdateSerializer
+        return SingleBoardDetailSerializer
+
 
     
