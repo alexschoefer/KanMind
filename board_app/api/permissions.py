@@ -16,3 +16,8 @@ class IsBoardMemberOrOwner(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
+
+
+class IsBoardOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user

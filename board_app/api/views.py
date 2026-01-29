@@ -3,7 +3,7 @@ from board_app.models import Board
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
-from .permissions import IsBoardMemberOrOwner
+from .permissions import IsBoardMemberOrOwner, IsBoardOwner
 from django.db.models import Q
 from rest_framework.exceptions import PermissionDenied
 
@@ -41,7 +41,12 @@ class BoardCreateView(generics.CreateAPIView):
         return Response(dashboard_serializer.data, status=status.HTTP_201_CREATED)
     
 class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
+    queryset = Board.objects.all()
+
+    def get_permissions(self):
+        if self.request.method == "DELETE":
+            return [IsAuthenticated(), IsBoardOwner()]
+        return [IsAuthenticated(), IsBoardMemberOrOwner()]
 
     def get_queryset(self):
         user = self.request.user
@@ -50,7 +55,6 @@ class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
         ).distinct()
 
     def patch(self, request, *args, **kwargs):
-        #holt das aktuelle Board aus der DB
         instance = self.get_object()
 
         serializer = BoardUpdateSerializer(
@@ -62,13 +66,13 @@ class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        #erzeugt die neue Response
         response_serializer = BoardUpdateResponseSerializer(
             instance,
             context={"request": request}
         )
 
         return Response(response_serializer.data, status=status.HTTP_200_OK)
+
 
 
 
