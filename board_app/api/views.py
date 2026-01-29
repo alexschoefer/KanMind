@@ -1,4 +1,4 @@
-from .serializers import BoardDashboardSerializer, BoardCreateSerializer, SingleBoardDetailSerializer, BoardUpdateSerializer
+from .serializers import BoardDashboardSerializer, BoardCreateSerializer, SingleBoardDetailSerializer, BoardUpdateSerializer, BoardUpdateResponseSerializer
 from board_app.models import Board
 from rest_framework.response import Response
 from rest_framework import generics, status
@@ -49,10 +49,27 @@ class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
             Q(owner=user) | Q(members=user)
         ).distinct()
 
-    def get_serializer_class(self):
-        if self.request.method in ["PATCH", "PUT"]:
-            return BoardUpdateSerializer
-        return SingleBoardDetailSerializer
+    def patch(self, request, *args, **kwargs):
+        #holt das aktuelle Board aus der DB
+        instance = self.get_object()
+
+        serializer = BoardUpdateSerializer(
+            instance,
+            data=request.data,
+            partial=True,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        #erzeugt die neue Response
+        response_serializer = BoardUpdateResponseSerializer(
+            instance,
+            context={"request": request}
+        )
+
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
 
 
     

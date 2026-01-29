@@ -98,6 +98,22 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
         model = Board
         fields = ["title", "members"]
 
+    def update(self, instance, validated_data):
+        members = validated_data.pop("members", None)
+
+        # normale Feld-Updates (z. B. title)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+
+        # 🔥 MEMBERS ERSETZEN (Soll-Zustand!)
+        if members is not None:
+            instance.members.set(members)
+
+        return instance
+
+
 
 class BoardUpdateResponseSerializer(serializers.ModelSerializer):
     owner_data = BoardMemberSerializer(source="owner", read_only=True)
