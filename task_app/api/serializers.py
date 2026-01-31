@@ -96,3 +96,38 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         return data
 
 
+class TaskUpdateSerializer(serializers.ModelSerializer):
+
+    assignee_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source="assignee",
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
+    reviewer_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source="reviewer",
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
+
+    class Meta:
+        model=Task
+        fields= [
+            "title",
+            "description",
+            "status",
+            "priority",
+            "assignee_id",
+            "reviewer_id",
+            "due_date",
+        ]
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
