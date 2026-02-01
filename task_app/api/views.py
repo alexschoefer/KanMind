@@ -1,6 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from .serializers import TaskUserSerializer, TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer
+from .serializers import TaskUserSerializer, TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer, TaskUpdateResponseSerializer
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsBoardMember
 from django.db.models import Q
@@ -69,11 +69,12 @@ class SingleTaskView(generics.RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        # Response immer im GET-Format
-        return Response(
-            TaskSerializer(instance, context={"request": request}).data,
-            status=status.HTTP_200_OK
+        response_serializer = TaskUpdateResponseSerializer(
+            instance,
+            context={"request": request}
         )
+
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
     
 
 

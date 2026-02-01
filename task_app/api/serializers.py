@@ -131,3 +131,21 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class TaskUpdateResponseSerializer(serializers.ModelSerializer):
+    assignee = TaskUserSerializer(read_only=True)
+    reviewer = TaskUserSerializer(read_only=True)
+
+    class Meta:
+        model = Task
+        fields = [
+            "id",
+            "title",
+            "description",
+            "status",
+            "priority",
+            "assignee",
+            "reviewer",
+            "due_date",
+        ]
