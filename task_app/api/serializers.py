@@ -2,8 +2,6 @@ from rest_framework import serializers
 from task_app.models import Task
 from django.contrib.auth.models import User
 
-
-
 class TaskUserSerializer(serializers.ModelSerializer):
     fullname = serializers.CharField(source="userprofile.fullname")
 
@@ -94,6 +92,10 @@ class TaskCreateSerializer(serializers.ModelSerializer):
             )
 
         return data
+    
+    def create(self, validated_data):
+        validated_data["created_by"] = self.context["request"].user
+        return super().create(validated_data)
 
 
 class TaskUpdateSerializer(serializers.ModelSerializer):

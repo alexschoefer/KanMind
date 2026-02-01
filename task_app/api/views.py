@@ -2,7 +2,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from .serializers import TaskUserSerializer, TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer, TaskUpdateResponseSerializer
 from rest_framework.permissions import IsAuthenticated
-from .permissions import IsBoardMember
+from .permissions import IsBoardMember, IsTaskCreatorOrBoardOwner
 from django.db.models import Q
 from task_app.models import Task
 from board_app.models import Board
@@ -49,17 +49,19 @@ class TaskCreateView(generics.CreateAPIView):
 
 class SingleTaskView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
-    permission_classes = [IsAuthenticated, IsBoardMember]
-    serializer_class = TaskUpdateSerializer
 
-    def get_queryset(self):
-        user = self.request.user
-        return Task.objects.filter(
-            Q(board__owner=user) | Q(board__members=user)
-        ).distinct()
+    def get_serializer_class(self):
+        if self.request.method in ["PATCH", "PUT"]:
+            return TaskUpdateSerializer
+        return TaskSerializer
+
+    def get_permissions(self):
+        if self.request.method == "DELETE":
+            return [IsAuthenticated(), IsTaskCreatorOrBoardOwner()]
+        return [IsAuthenticated(), IsBoardMember()]
 
     def patch(self, request, *args, **kwargs):
-        instance = self.get_object()  # ruft check_object_permissions auf
+        instance = self.get_object()  # check_object_permissions()
         serializer = self.get_serializer(
             instance,
             data=request.data,
@@ -69,12 +71,14 @@ class SingleTaskView(generics.RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        response_serializer = TaskUpdateResponseSerializer(
-            instance,
-            context={"request": request}
+        return Response(
+            TaskUpdateResponseSerializer(
+                instance,
+                context={"request": request}
+            ).data,
+            status=status.HTTP_200_OK
         )
 
-        return Response(response_serializer.data, status=status.HTTP_200_OK)
     
 
 
