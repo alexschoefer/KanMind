@@ -45,3 +45,16 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.board.title})"
+
+class TaskCommentModel(models.Model):
+    created_at=models.DateTimeField(auto_now_add=True),
+    author=models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="author",
+    )
+    content=models.TextField(max_length=255, null=True, blank=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comment', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.board.title})"
