@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from task_app.models import Task
+from task_app.models import Task, TaskCommentModel
 from django.contrib.auth.models import User
 
 class TaskUserSerializer(serializers.ModelSerializer):
@@ -151,3 +151,32 @@ class TaskUpdateResponseSerializer(serializers.ModelSerializer):
             "reviewer",
             "due_date",
         ]
+
+class TaskCommentCreateSerializer(serializers.ModelSerializer):
+    author = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = TaskCommentModel
+        fields = [
+            "id",
+            "created_at",
+            "author",
+            "content",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class TaskCommentsSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TaskCommentModel
+        fields = ["id", "created_at", "author", "content"]
+
+    def get_author(self, obj):
+        return obj.author.userprofile.fullname
+
+
+    

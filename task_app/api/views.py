@@ -1,10 +1,11 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from .serializers import TaskUserSerializer, TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer, TaskUpdateResponseSerializer
+from rest_framework.exceptions import NotFound
+from .serializers import TaskUserSerializer, TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer, TaskUpdateResponseSerializer, TaskCommentCreateSerializer, TaskCommentsSerializer
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsBoardMember, IsTaskCreatorOrBoardOwner
 from django.db.models import Q
-from task_app.models import Task
+from task_app.models import Task, TaskCommentModel
 from board_app.models import Board
 
 class TasksAssignedToMeView(generics.ListAPIView):
@@ -80,5 +81,23 @@ class SingleTaskView(generics.RetrieveUpdateDestroyAPIView):
         )
 
     
+class CommentListCreateAPIView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated, IsBoardMember]
+
+    def get_queryset(self):
+        return TaskCommentModel.objects.filter(
+            task_id=self.kwargs["pk"]
+        ).select_related("author__userprofile").order_by("created_at")
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return TaskCommentCreateSerializer
+        return TaskCommentsSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(
+            task_id=self.kwargs["pk"],
+            author=self.request.user
+        )
 
 
