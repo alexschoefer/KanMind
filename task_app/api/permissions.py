@@ -25,3 +25,11 @@ class IsTaskCreatorOrBoardOwner(permissions.BasePermission):
             obj.created_by == user
             or obj.board.owner == user
         )
+    
+class IsCommentAuthor(permissions.BasePermission):
+    """
+    Allows access only to the author of the comment.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return obj.author == request.user

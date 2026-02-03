@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from .serializers import TaskUserSerializer, TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer, TaskUpdateResponseSerializer, TaskCommentCreateSerializer, TaskCommentsSerializer
 from rest_framework.permissions import IsAuthenticated
-from .permissions import IsBoardMember, IsTaskCreatorOrBoardOwner
+from .permissions import IsBoardMember, IsTaskCreatorOrBoardOwner,IsCommentAuthor
 from django.db.models import Q
 from task_app.models import Task, TaskCommentModel
 from board_app.models import Board
@@ -100,4 +100,23 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
             author=self.request.user
         )
 
+
+class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TaskCommentModel.objects.all()
+    serializer_class = TaskCommentsSerializer
+    permission_classes = [IsAuthenticated, IsCommentAuthor]
+
+    def get_queryset(self):
+        """
+        Return a queryset of the specific comment for the given task and comment IDs.
+
+        Returns:
+            Queryset: The comment matching the task_id and pk.
+        """
+        task_id = self.kwargs.get('task_id')
+        comment_id = self.kwargs.get('pk')
+        return TaskCommentModel.objects.filter(
+            task_id=task_id,
+            pk=comment_id
+        )
 
