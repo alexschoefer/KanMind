@@ -1,11 +1,13 @@
-from .serializers import BoardDashboardSerializer, BoardCreateSerializer, SingleBoardDetailSerializer, BoardUpdateSerializer, BoardUpdateResponseSerializer
+from .serializers import BoardDashboardSerializer, BoardCreateSerializer, EmailCheckSerializer, BoardUpdateSerializer, BoardUpdateResponseSerializer
 from board_app.models import Board
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsBoardMemberOrOwner, IsBoardOwner
 from django.db.models import Q
 from rest_framework.exceptions import PermissionDenied
+from django.contrib.auth.models import User
 
 
 class BoardDashboardView(generics.ListCreateAPIView):
@@ -74,6 +76,27 @@ class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response(response_serializer.data, status=status.HTTP_200_OK)
 
 
+class EmailCheckView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        serializer = EmailCheckSerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+
+        try:
+            user = User.objects.get(email=email)
+            fullname = f"{user.first_name} {user.last_name}".strip() or user.username
+            return Response({
+                "id": user.id,
+                "email": user.email,
+                "fullname": fullname
+            })
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "Email not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
     

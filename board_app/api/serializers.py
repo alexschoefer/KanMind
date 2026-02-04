@@ -122,3 +122,7 @@ class BoardUpdateResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = ["id", "title", "owner_data", "members_data"]
+
+
+class EmailCheckSerializer(serializers.Serializer):
+    email = serializers.EmailField()
