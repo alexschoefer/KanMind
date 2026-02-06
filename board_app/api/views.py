@@ -95,6 +95,7 @@ class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
 
     queryset = Board.objects.all()
+    serializer_class = BoardDashboardSerializer
 
     def get_permissions(self):
         """
