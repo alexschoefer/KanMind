@@ -68,7 +68,7 @@ class TaskCommentModel(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True,null=True,blank=True,)
 
-    author = models.ForeignKey(User,on_delete=models.CASCADE,elated_name="task_comments",)
+    author = models.ForeignKey(User,on_delete=models.CASCADE,related_name="task_comments",)
 
     content = models.TextField(max_length=255,null=True,blank=True)
 
