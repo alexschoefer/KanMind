@@ -1,19 +1,35 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Board(models.Model):
-    title=models.CharField(max_length=255)
-    #Ein Board gehört genau zu EINEM user, ein User kann aber mehrere Boards besitzen => 1:n Beziehung!
+    """
+    Represents a project board that groups users and tasks.
+
+    A board has exactly one owner and can have multiple members.
+    The owner is always implicitly considered a member of the board.
+    """
+
+    title = models.CharField(
+        max_length=255,
+    )
+
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="owned_boards"
+        related_name="owned_boards",
     )
+
     members = models.ManyToManyField(
         User,
-        related_name="boards"
+        related_name="boards",
     )
 
     def __str__(self):
-        return self.title
+        """
+        Return representation of the board.
 
+        Returns:
+            str: The board title.
+        """
+        return self.title
