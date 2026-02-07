@@ -155,6 +155,15 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsBoardMemberForComment]
     serializer_class = TaskCommentsSerializer
 
+    """
+    Return all comments for a given task if the requesting user
+    is a member or owner of the task's board.
+    
+    Raises:
+        NotFound: If the task does not exist.
+        PermissionDenied: If the user is not a member of the board.
+    """
+
     def get_queryset(self):
         user = self.request.user
         task_id = self.kwargs["pk"]
