@@ -193,24 +193,28 @@ class TaskUpdateResponseSerializer(serializers.ModelSerializer):
         ]
 
 
-class TaskCommentCreateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for creating a task comment.
-    """
+# class TaskCommentCreateSerializer(serializers.ModelSerializer):
+#     """
+#     Serializer for creating a task comment.
+#     """
 
-    author = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
+#     author = serializers.SerializerMethodField()
 
-    class Meta:
-        model = TaskCommentModel
-        fields = [
-            "id",
-            "created_at",
-            "author",
-            "content",
-        ]
-        read_only_fields = ["id", "created_at"]
+#     class Meta:
+#         model = TaskCommentModel
+#         fields = [
+#             "id",
+#             "created_at",
+#             "author",
+#             "content",
+#         ]
+#         read_only_fields = ["id", "created_at"]
+
+#     def get_author(self, obj):
+#         """
+#         Return the full name of the comment author.
+#         """
+#         return obj.author.userprofile.fullname
 
 
 class TaskCommentsSerializer(serializers.ModelSerializer):

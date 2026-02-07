@@ -12,7 +12,6 @@ from .serializers import (
     TaskCreateSerializer,
     TaskUpdateSerializer,
     TaskUpdateResponseSerializer,
-    TaskCommentCreateSerializer,
     TaskCommentsSerializer,
 )
 from .permissions import (
@@ -152,6 +151,7 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
     """
 
     permission_classes = [IsAuthenticated, IsBoardMember]
+    serializer_class = TaskCommentsSerializer
 
     def get_queryset(self):
         """
@@ -162,14 +162,6 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
         ).select_related(
             "author__userprofile"
         ).order_by("created_at")
-
-    def get_serializer_class(self):
-        """
-        Return the appropriate serializer based on request method.
-        """
-        if self.request.method == "POST":
-            return TaskCommentCreateSerializer
-        return TaskCommentsSerializer
 
     def perform_create(self, serializer):
         """
