@@ -4,43 +4,6 @@
     <meta charset="UTF-8">
     <title>KanMind – Project Management Backend</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            line-height: 1.6;
-            margin: 40px;
-            max-width: 900px;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-        }
-        code, pre {
-            background-color: #f4f4f4;
-            padding: 8px;
-            border-radius: 4px;
-            display: block;
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 16px 0;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #f0f0f0;
-        }
-        ul {
-            margin-left: 20px;
-        }
-    </style>
 </head>
 <body>
 
