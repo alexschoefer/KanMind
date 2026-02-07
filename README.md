@@ -6,10 +6,10 @@
 </head>
 <body>
 
-<h1>KanMind</h1>
+<h1>KanMind – Project Management Backend</h1>
 
 <p>
-    <strong>KanMind – Project Management Backend</strong> is a backend API for a project management tool built with
+    <strong>KanMind</strong> is a backend API for a project management tool built with
     <em>Django</em> and <em>Django REST Framework</em>.
 </p>
 
