@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>KanMind – Project Management Backend</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -10,7 +9,7 @@
 <h1>KanMind</h1>
 
 <p>
-    <strong>KanMind</strong> is a backend API for a project management tool built with
+    <strong>KanMind – Project Management Backend</strong> is a backend API for a project management tool built with
     <em>Django</em> and <em>Django REST Framework</em>.
 </p>
 
