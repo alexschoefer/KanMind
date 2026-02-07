@@ -100,11 +100,6 @@ class TaskCreateSerializer(serializers.ModelSerializer):
                 or board.members.filter(id=user.id).exists()
             )
 
-        if not is_member(request_user):
-            raise serializers.ValidationError(
-                "You must be a member of the board to create a task."
-            )
-
         assignee = data.get("assignee")
         reviewer = data.get("reviewer")
 

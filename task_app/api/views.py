@@ -19,7 +19,8 @@ from .permissions import (
     IsBoardMember,
     IsTaskCreatorOrBoardOwner,
     IsCommentAuthor,
-    IsBoardMemberForComment
+    IsBoardMemberForComment,
+    IsBoardMemberForTaskCreate
 )
 
 
@@ -74,19 +75,17 @@ class TaskCreateView(generics.CreateAPIView):
     """
 
     serializer_class = TaskCreateSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,IsBoardMemberForTaskCreate]
 
     def perform_create(self, serializer):
-        """
-        Save the created task instance for response serialization.
-        """
-        self.task = serializer.save()
+        self.task = serializer.save(
+            created_by=self.request.user
+        )
 
     def create(self, request, *args, **kwargs):
-        """
-        Create a task and return the full task representation.
-        """
-        super().create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
 
         return Response(
             TaskSerializer(
