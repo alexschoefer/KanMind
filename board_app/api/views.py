@@ -14,6 +14,7 @@ from .serializers import (
     BoardUpdateSerializer,
     BoardUpdateResponseSerializer,
     EmailCheckSerializer,
+    SingleBoardDetailSerializer
 )
 from .permissions import IsBoardMemberOrOwner, IsBoardOwner
 
@@ -83,7 +84,7 @@ class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
 
     queryset = Board.objects.all()
-    serializer_class = BoardDashboardSerializer
+    serializer_class = SingleBoardDetailSerializer
 
     def get_permissions(self):
         """
@@ -95,15 +96,7 @@ class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == "DELETE":
             return [IsAuthenticated(), IsBoardOwner()]
         return [IsAuthenticated(), IsBoardMemberOrOwner()]
-
-    def get_queryset(self):
-        """
-        Restrict queryset to boards the user is associated with.
-        """
-        user = self.request.user
-        return Board.objects.filter(
-            Q(owner=user) | Q(members=user)
-        ).distinct()
+    
 
     def patch(self, request, *args, **kwargs):
         """

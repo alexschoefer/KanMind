@@ -2,8 +2,10 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from board_app.models import Board
-from task_app.api.serializers import TaskSerializer
 
+from rest_framework.exceptions import PermissionDenied
+from task_app.api.serializers import TaskUserSerializer
+from task_app.models import Task
 
 class BoardDashboardSerializer(serializers.ModelSerializer):
     """
@@ -111,13 +113,34 @@ class BoardMemberSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "fullname"]
 
 
+class BoardTaskSerializer(serializers.ModelSerializer):
+    assignee = TaskUserSerializer(read_only=True)
+    reviewer = TaskUserSerializer(read_only=True)
+    comments_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Task
+        fields = ["id", "title", "description", "status", "priority", "assignee", "reviewer", "due_date", "comments_count"]
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
+    def to_representation(self, instance):
+        user = self.context["request"].user
+        board = instance.board
+        if not (board.owner == user or board.members.filter(id=user.id).exists()):
+            raise PermissionDenied("You must be a member of the board to view tasks.")
+        return super().to_representation(instance)
+
+
+
 class SingleBoardDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for detailed board view including members and tasks.
     """
 
     members = BoardMemberSerializer(many=True, read_only=True)
-    tasks = TaskSerializer(many=True, read_only=True)
+    tasks = BoardTaskSerializer(many=True, read_only=True)
     owner_id = serializers.IntegerField(
         source="owner.id",
         read_only=True,
