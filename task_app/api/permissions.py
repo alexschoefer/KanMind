@@ -1,5 +1,5 @@
 from rest_framework import permissions
-
+from task_app.models import Task
 
 class IsBoardMember(permissions.BasePermission):
     """
@@ -83,3 +83,31 @@ class IsCommentAuthor(permissions.BasePermission):
             bool: True if the user authored the comment.
         """
         return obj.author == request.user
+    
+
+class IsBoardMemberForComment(permissions.BasePermission):
+    """
+    Allows creating comments only if the user is a member
+    or owner of the board the task belongs to.
+    """
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        task_id = view.kwargs.get("pk")
+        if not task_id:
+            return False
+
+        try:
+            task = Task.objects.select_related("board").get(pk=task_id)
+        except Task.DoesNotExist:
+            return False
+
+        board = task.board
+        user = request.user
+
+        return (
+            board.owner == user
+            or board.members.filter(id=user.id).exists()
+        )

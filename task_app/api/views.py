@@ -3,6 +3,7 @@ from django.db.models import Q
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied, NotFound
 
 from board_app.models import Board
 from task_app.models import Task, TaskCommentModel
@@ -18,6 +19,7 @@ from .permissions import (
     IsBoardMember,
     IsTaskCreatorOrBoardOwner,
     IsCommentAuthor,
+    IsBoardMemberForComment
 )
 
 
@@ -150,15 +152,30 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
     API view for listing and creating comments for a task.
     """
 
-    permission_classes = [IsAuthenticated, IsBoardMember]
+    permission_classes = [IsAuthenticated, IsBoardMemberForComment]
     serializer_class = TaskCommentsSerializer
 
     def get_queryset(self):
-        """
-        Return all comments for the given task ordered by creation date.
-        """
+        user = self.request.user
+        task_id = self.kwargs["pk"]
+
+        try:
+            task = Task.objects.select_related("board").get(pk=task_id)
+        except Task.DoesNotExist:
+            raise NotFound("Task not found.")
+
+        board = task.board
+
+        if not (
+            board.owner == user
+            or board.members.filter(id=user.id).exists()
+        ):
+            raise PermissionDenied(
+                "You must be a member of the board to view comments."
+            )
+
         return TaskCommentModel.objects.filter(
-            task_id=self.kwargs["pk"]
+            task=task
         ).select_related(
             "author__userprofile"
         ).order_by("created_at")
