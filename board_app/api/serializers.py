@@ -27,6 +27,7 @@ class BoardDashboardSerializer(serializers.ModelSerializer):
             "tasks_high_prio_count",
             "owner_id",
         ]
+        read_only_fields = ['owner_id', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count']
 
     def get_member_count(self, obj):
         """

@@ -52,39 +52,27 @@ class BoardDashboardView(generics.ListCreateAPIView):
         if self.request.method == "POST":
             return BoardCreateSerializer
         return BoardDashboardSerializer
-
-
-class BoardCreateView(generics.CreateAPIView):
-    """
-    API view for creating a new board.
-
-    Returns the created board in dashboard format.
-    """
-
-    permission_classes = [IsAuthenticated]
-    serializer_class = BoardCreateSerializer
-
-    def perform_create(self, serializer):
-        """
-        Save the created board instance for later response serialization.
-        """
-        self.board = serializer.save()
-
+    
     def create(self, request, *args, **kwargs):
         """
         Create a new board and return dashboard representation.
         """
-        response = super().create(request, *args, **kwargs)
+        serializer = self.get_serializer(
+                    data=request.data,
+                    context={"request": request},
+                )
+        serializer.is_valid(raise_exception=True)
+        board = serializer.save()
 
         dashboard_serializer = BoardDashboardSerializer(
-            self.board,
-            context={"request": request},
-        )
+                    board,
+                    context={"request": request},
+                )
 
         return Response(
-            dashboard_serializer.data,
-            status=status.HTTP_201_CREATED,
-        )
+                    dashboard_serializer.data,
+                    status=status.HTTP_201_CREATED,
+                )
 
 
 class SingleBoardDetailView(generics.RetrieveUpdateDestroyAPIView):
