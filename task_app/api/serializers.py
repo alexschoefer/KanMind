@@ -286,7 +286,7 @@ class TaskCommentsSerializer(serializers.ModelSerializer):
     """
 
     author = serializers.SerializerMethodField()
-    content = serializers.CharField(required=True, allow_blank=False)
+    content = serializers.CharField(required=True, allow_blank=False, max_length=255)
 
     class Meta:
         model = TaskCommentModel

@@ -1,6 +1,7 @@
 from rest_framework import permissions
 from task_app.models import Task
 from task_app.models import Board
+from rest_framework.exceptions import NotFound
 
 class IsBoardMember(permissions.BasePermission):
     """
@@ -125,12 +126,9 @@ class IsBoardMemberForComment(permissions.BasePermission):
         try:
             task = Task.objects.select_related("board").get(pk=task_id)
         except Task.DoesNotExist:
-            return False
+            raise NotFound(f"Task with id {task_id} does not exist.")
 
         board = task.board
         user = request.user
 
-        return (
-            board.owner == user
-            or board.members.filter(id=user.id).exists()
-        )
+        return board.owner == user or board.members.filter(id=user.id).exists()
