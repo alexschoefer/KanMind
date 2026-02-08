@@ -69,32 +69,80 @@ class TasksReviewedToMeView(generics.ListAPIView):
         ).distinct()
 
 
+# class TaskCreateView(generics.CreateAPIView):
+#     """
+#     API view for creating a new task within a board.
+#     URL: /boards/{board_id}/tasks/
+#     """
+
+#     serializer_class = TaskCreateSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_board(self):
+#         board_id = self.kwargs["pk"]
+#         user = self.request.user
+
+#         try:
+#             board = Board.objects.get(pk=board_id)
+#         except Board.DoesNotExist:
+#             raise NotFound("Board not found.")
+
+#         if not (
+#             board.owner == user
+#             or board.members.filter(id=user.id).exists()
+#         ):
+#             raise PermissionDenied(
+#                 "You must be a member of the board to create tasks."
+#             )
+
+#         return board
+
+#     def get_serializer_context(self):
+#         """
+#         Inject board into serializer context
+#         """
+#         context = super().get_serializer_context()
+#         context["board"] = self.get_board()
+#         return context
+
+#     def perform_create(self, serializer):
+#         self.task = serializer.save()
+
+#     def create(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         self.perform_create(serializer)
+
+#         return Response(
+#             TaskSerializer(
+#                 self.task,
+#                 context={"request": request},
+#             ).data,
+#             status=status.HTTP_201_CREATED,
+#         )
+
 class TaskCreateView(generics.CreateAPIView):
     """
-    API view for creating a new task.
+    API view for creating a new task under a board.
+
+    - Board ID is provided in the request body.
+    - Returns 404 if board does not exist.
+    - Returns 403 if user is not member or owner of the board.
     """
 
     serializer_class = TaskCreateSerializer
-    permission_classes = [IsAuthenticated,IsBoardMemberForTaskCreate]
-
-    def perform_create(self, serializer):
-        self.task = serializer.save(
-            created_by=self.request.user
-        )
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)  # <- hier wird alles validiert
+
+        task = serializer.save()  # Board, created_by, assignee/reviewer werden hier gesetzt
 
         return Response(
-            TaskSerializer(
-                self.task,
-                context={"request": request},
-            ).data,
+            TaskSerializer(task, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )
-
 
 class SingleTaskView(generics.RetrieveUpdateDestroyAPIView):
     """

@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-
+from board_app.models import Board
 from task_app.models import Task, TaskCommentModel
+from rest_framework.exceptions import PermissionDenied, NotFound
 
 
 class TaskUserSerializer(serializers.ModelSerializer):
@@ -48,13 +49,7 @@ class TaskSerializer(serializers.ModelSerializer):
             return obj.comments.count()
         return 0
 
-
 class TaskCreateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for creating a new task. Handles assignment of assignee and reviewer
-    and validates board membership.
-    """
-
     assignee_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source="assignee",
@@ -70,6 +65,8 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
 
+    board = serializers.IntegerField()  # ID direkt aus Request
+
     class Meta:
         model = Task
         fields = [
@@ -84,21 +81,22 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        """
-        Validate task creation rules.
+        user = self.context["request"].user
+        board_id = data.get("board")
 
-        Ensures that:
-        - The creator is a member of the board
-        - Assignee and reviewer are board members
-        """
-        request_user = self.context["request"].user
-        board = data["board"]
+        # Board existiert?
+        try:
+            board = Board.objects.get(id=board_id)
+        except Board.DoesNotExist:
+            raise NotFound(f"Board with id {board_id} does not exist.")
 
-        def is_member(user):
-            return (
-                user == board.owner
-                or board.members.filter(id=user.id).exists()
-            )
+        # User darf Task nur erstellen, wenn er Mitglied oder Owner ist
+        if not (board.owner == user or board.members.filter(id=user.id).exists()):
+            raise PermissionDenied("You must be a member of the board to create tasks.")
+
+        # Assignee und Reviewer validieren
+        def is_member(u):
+            return u == board.owner or board.members.filter(id=u.id).exists()
 
         assignee = data.get("assignee")
         reviewer = data.get("reviewer")
@@ -107,20 +105,90 @@ class TaskCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"assignee_id": "Assignee must be a board member."}
             )
-
         if reviewer and not is_member(reviewer):
             raise serializers.ValidationError(
                 {"reviewer_id": "Reviewer must be a board member."}
             )
 
+        data["board"] = board  # Board-Instanz speichern
         return data
 
     def create(self, validated_data):
-        """
-        Create a new task and assign the requesting user as creator.
-        """
         validated_data["created_by"] = self.context["request"].user
         return super().create(validated_data)
+
+
+# class TaskCreateSerializer(serializers.ModelSerializer):
+#     """
+#     Serializer for creating a new task.
+#     - Assignee / reviewer handling
+#     - Board membership validation (via context)
+#     """
+
+#     assignee_id = serializers.PrimaryKeyRelatedField(
+#         queryset=User.objects.all(),
+#         source="assignee",
+#         write_only=True,
+#         required=False,
+#         allow_null=True,
+#     )
+#     reviewer_id = serializers.PrimaryKeyRelatedField(
+#         queryset=User.objects.all(),
+#         source="reviewer",
+#         write_only=True,
+#         required=False,
+#         allow_null=True,
+#     )
+
+#     class Meta:
+#         model = Task
+#         fields = [
+#             "title",
+#             "description",
+#             "status",
+#             "priority",
+#             "assignee_id",
+#             "reviewer_id",
+#             "due_date",
+#         ]
+
+#     def validate(self, data):
+#         """
+#         Validate:
+#         - Assignee is board member
+#         - Reviewer is board member
+#         """
+#         board = self.context["board"]
+
+#         def is_member(user):
+#             return (
+#                 user == board.owner
+#                 or board.members.filter(id=user.id).exists()
+#             )
+
+#         assignee = data.get("assignee")
+#         reviewer = data.get("reviewer")
+
+#         if assignee and not is_member(assignee):
+#             raise serializers.ValidationError(
+#                 {"assignee_id": "Assignee must be a board member."}
+#             )
+
+#         if reviewer and not is_member(reviewer):
+#             raise serializers.ValidationError(
+#                 {"reviewer_id": "Reviewer must be a board member."}
+#             )
+
+#         return data
+
+#     def create(self, validated_data):
+#         """
+#         Create task with board and creator injected from view
+#         """
+#         validated_data["board"] = self.context["board"]
+#         validated_data["created_by"] = self.context["request"].user
+#         return super().create(validated_data)
+
 
 
 class TaskUpdateSerializer(serializers.ModelSerializer):
@@ -218,6 +286,7 @@ class TaskCommentsSerializer(serializers.ModelSerializer):
     """
 
     author = serializers.SerializerMethodField()
+    content = serializers.CharField(required=True, allow_blank=False)
 
     class Meta:
         model = TaskCommentModel
