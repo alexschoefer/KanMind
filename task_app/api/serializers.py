@@ -50,6 +50,14 @@ class TaskSerializer(serializers.ModelSerializer):
         return 0
 
 class TaskCreateSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for creating a new task.
+    - Assignee / reviewer handling
+    - Board membership validation (via context)
+    
+    """
+
     assignee_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source="assignee",
@@ -65,7 +73,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
 
-    board = serializers.IntegerField()  # ID direkt aus Request
+    board = serializers.IntegerField()
 
     class Meta:
         model = Task
@@ -84,17 +92,14 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         board_id = data.get("board")
 
-        # Board existiert?
         try:
             board = Board.objects.get(id=board_id)
         except Board.DoesNotExist:
             raise NotFound(f"Board with id {board_id} does not exist.")
 
-        # User darf Task nur erstellen, wenn er Mitglied oder Owner ist
         if not (board.owner == user or board.members.filter(id=user.id).exists()):
             raise PermissionDenied("You must be a member of the board to create tasks.")
 
-        # Assignee und Reviewer validieren
         def is_member(u):
             return u == board.owner or board.members.filter(id=u.id).exists()
 
@@ -110,7 +115,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
                 {"reviewer_id": "Reviewer must be a board member."}
             )
 
-        data["board"] = board  # Board-Instanz speichern
+        data["board"] = board
         return data
 
     def create(self, validated_data):
