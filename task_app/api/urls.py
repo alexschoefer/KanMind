@@ -10,5 +10,5 @@ urlpatterns = [
     path('api/tasks/', TaskCreateView.as_view(), name="create-task"), #View to create a task for a board
     path('api/tasks/<int:pk>/', SingleTaskView.as_view(), name="task"), #View to update or delete a task at a board
     path('api/tasks/<int:pk>/comments/', CommentListCreateAPIView.as_view(), name="comment-collection"), #View to get or create a comment on a special task pk=task_id
-    path('api/tasks/<int:task_id>/comments/<int:pk>', CommentRetrieveUpdateDestroyView.as_view(), name="comment") #View for deleting a comment on a special task pk=task_id
+    path('api/tasks/<int:task_id>/comments/<int:pk>/', CommentRetrieveUpdateDestroyView.as_view(), name="comment") #View for deleting a comment on a special task pk=task_id
 ]
